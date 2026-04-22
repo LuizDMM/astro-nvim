@@ -1,40 +1,17 @@
 return {
   "AstroNvim/astrocore",
   ---@type AstroCoreOpts
-  opts = {
-    mappings = {
-      n = {
-          -- C++ compile only
-          ["<leader>m"] = {
-            function()
-              local file = vim.fn.expand('%:p')
-              local name = vim.fn.expand('%:t:r')
-              local dir = vim.fn.expand('%:p:h')
-              if vim.fn.expand('%:e') == 'cpp' or vim.fn.expand('%:e') == 'cc' or vim.fn.expand('%:e') == 'cxx' then
-                vim.cmd('split')
-                vim.cmd('terminal cd ' .. dir .. ' && clang++ -std=c++20 -o ' .. name .. ' ' .. file)
-              else
-                vim.notify("Not a C++ file", vim.log.levels.WARN)
-              end
-            end,
-            desc = "Compile C++ file with clang++"
-          },
-          -- C++ compile and run
-          ["<leader>mr"] = {
-            function()
-              local file = vim.fn.expand('%:p')
-              local name = vim.fn.expand('%:t:r')
-              local dir = vim.fn.expand('%:p:h')
-              if vim.fn.expand('%:e') == 'cpp' or vim.fn.expand('%:e') == 'cc' or vim.fn.expand('%:e') == 'cxx' then
-                vim.cmd('split')
-                vim.cmd('terminal cd ' .. dir .. ' && clang++ -std=c++20 -o ' .. name .. ' ' .. file .. ' && ./' .. name)
-              else
-                vim.notify("Not a C++ file", vim.log.levels.WARN)
-              end
-            end,
-            desc = "Compile and run C++ file with clang++"
-          }
-      }
-    }
-    }
+  opts = function(_, opts)
+    local get_icon = require("astroui").get_icon
+    if not opts.mappings then opts.mappings = {} end
+    if not opts.mappings.n then opts.mappings.n = {} end
+    local maps = opts.mappings.n
+    maps["<leader>m"] = { desc = get_icon("CompetiTest", 1, true) .. "CompetiTest" }
+    maps["<leader>mr"] = { "<cmd>CompetiTest run<cr>", desc = "Run testcases" }
+    maps["<leader>ma"] = { "<cmd>CompetiTest add_testcase<cr>", desc = "Add testcase" }
+    maps["<leader>me"] = { "<cmd>CompetiTest edit_testcase<cr>", desc = "Edit testcase" }
+    maps["<leader>md"] = { "<cmd>CompetiTest delete_testcase<cr>", desc = "Delete testcase" }
+    maps["<leader>mp"] = { "<cmd>CompetiTest receive problem<cr>", desc = "Receive problem" }
+    maps["<leader>mc"] = { "<cmd>CompetiTest receive contest<cr>", desc = "Receive contest" }
+  end,
 }

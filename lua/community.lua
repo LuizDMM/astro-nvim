@@ -11,4 +11,5 @@ return {
   { import = "astrocommunity.pack.python" },
   { import = "astrocommunity.pack.java" },
   { import = "astrocommunity.pack.cpp" },
+  { import = "astrocommunity.pack.go" },
 }
