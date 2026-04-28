@@ -15,6 +15,10 @@ return {
         testcases_input_file_format = "$(FNOEXT)_input$(TCNUM).txt",
         testcases_output_file_format = "$(FNOEXT)_output$(TCNUM).txt",
 
+        template_file = {
+          cpp = "~/Projetos/competitive-programming/codeforces/template.cpp",
+        },
+
         companion_port = 27121,
         received_files_extension = "cpp",
         received_problems_path = "$(CWD)/$(PROBLEM).$(FEXT)",
