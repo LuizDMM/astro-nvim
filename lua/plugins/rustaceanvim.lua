@@ -1,38 +1,56 @@
+-- Fix for legacy bundled Neovim rust.vim using deprecated --write-mode flag
+-- with modern rustfmt (1.x). Force modern --emit=files behavior.
+vim.g.rustfmt_emit_files = 1
+
 return {
   {
-    "mrcjkb/rustaceanvim", -- add lsp plugin
-    version = "^5",
-    lazy = false, -- This plugin is already lazy
-    opts = function(_, opts)
-      local server_opts = vim.lsp.config.rust_analyzer
+    "mrcjkb/rustaceanvim",
+    version = vim.fn.has("nvim-0.12") == 1 and "^9" or "^8",
+    ft = "rust",
+    specs = {
+      {
+        "AstroNvim/astrolsp",
+        optional = true,
+        ---@type AstroLSPOpts
+        opts = {
+          handlers = { rust_analyzer = false }, -- disable setup of `rust_analyzer`
+        },
+      },
+    },
+    opts = function()
+      local astrolsp_opts = vim.lsp.config["rust_analyzer"] or {}
+
+      -- Starting from AstroNvim v6, lsp config entries may contain a
+      -- root_dir(bufnr, on_dir) which is incompatible with rustaceanvim's
+      -- root_dir(file_name, default_fn) signature. Drop it.
+      astrolsp_opts.root_dir = nil
+
       local server = {
-        ---@type table | (fun(project_root:string|nil, default_settings: table|nil):table) -- The rust-analyzer settings or a function that creates them.
+        ---@type table | (fun(project_root:string|nil, default_settings: table|nil):table)
         settings = function(project_root, default_settings)
-          local merge_table = require("astrocore").extend_tbl(default_settings or {}, server_opts.settings or {})
-          local ra = require "rustaceanvim.config.server"
-          -- load_rust_analyzer_settings merges any found settings with the passed in default settings table and then returns that table
+          local astrolsp_settings = astrolsp_opts.settings or {}
+          local merge_table = require("astrocore").extend_tbl(default_settings or {}, astrolsp_settings)
+
+          local ra = require("rustaceanvim.config.server")
           return ra.load_rust_analyzer_settings(project_root, {
             settings_file_pattern = "rust-analyzer.json",
             default_settings = merge_table,
           })
         end,
       }
-      return { server = require("astrocore").extend_tbl(server_opts, server) }
+
+      local final_server = require("astrocore").extend_tbl(astrolsp_opts, server)
+      return { server = final_server }
     end,
-    -- configure `rustaceanvim` by setting the `vim.g.rustaceanvim` variable
-    config = function(_, opts) vim.g.rustaceanvim = require("astrocore").extend_tbl(opts, vim.g.rustaceanvim) end,
-  },
-  {
-    "AstroNvim/astrolsp",
-    ---@type AstroLSPOpts
-    opts = {
-      handlers = { rust_analyzer = false }, -- Let rustaceanvim setup `rust_analyzer`
-    },
+    config = function(_, opts)
+      vim.g.rustaceanvim = require("astrocore").extend_tbl(opts, vim.g.rustaceanvim)
+    end,
   },
   {
     "WhoIsSethDaniel/mason-tool-installer.nvim",
-    opts = {
-      ensure_installed = { "rust-analyzer" }, -- automatically install lsp
-    },
+    optional = true,
+    opts = function(_, opts)
+      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "rust-analyzer" })
+    end,
   },
 }
